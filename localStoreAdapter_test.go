@@ -224,7 +224,7 @@ func TestLocalStore_Lookup(t *testing.T) {
 		// We'll use an empty interface to reflect the new type in the file (a string).
 		var output interface{}
 		if err := store.Lookup("reloadLookupKey", &output); err == nil {
-			t.Fatalf("Failed to lookup after external modification: %v", err)
+			t.Fatalf("Failed to fail while looking up an unencrypted key after an out of band write of the file: %v", err)
 		}
 	})
 

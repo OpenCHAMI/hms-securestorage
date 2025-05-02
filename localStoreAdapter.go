@@ -26,7 +26,8 @@ type LocalStore struct {
 	masterKey   []byte
 	filename    string
 	Secrets     map[string]string `json:"secrets"`
-	lastModTime time.Time         // track last modification time
+	lastModTime time.Time         // track file's last modification time
+	lastSize    int64             // track file's last size
 }
 
 // Store saves a secret in the local store, encrypting it with AES-GCM
@@ -172,13 +173,14 @@ func NewLocalSecretStore(masterKeyHex, filename string, create bool) (*LocalStor
 		}
 	}
 
-	lastModTime, _ := getModTime(filename) // changed code (ignoring error here for brevity)
+	lastModTime, lastSize, _ := getFileStats(filename) // file changed code (ignoring error here for brevity)
 
 	return &LocalStore{
 		masterKey:   masterKey,
 		filename:    filename,
 		Secrets:     secrets,
-		lastModTime: lastModTime, // changed code
+		lastModTime: lastModTime, // file changed code
+		lastSize:    lastSize,
 	}, nil
 }
 
@@ -229,21 +231,21 @@ func loadSecrets(jsonFile string) (map[string]string, error) {
 	return store, err
 }
 
-func getModTime(filename string) (time.Time, error) {
+func getFileStats(filename string) (t time.Time, size int64, err error) {
 	info, err := os.Stat(filename)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, -1, err
 	}
-	return info.ModTime(), nil
+	return info.ModTime(), info.Size(), nil
 }
 
 // reloadIfChanged reloads secrets from disk if the file has been modified
 func (l *LocalStore) reloadIfChanged() error {
-	currentModTime, err := getModTime(l.filename)
+	currentModTime, currentSize, err := getFileStats(l.filename)
 	if err != nil {
 		return err
 	}
-	if currentModTime.After(l.lastModTime) {
+	if currentModTime.After(l.lastModTime) || currentSize != l.lastSize {
 		secrets, err := loadSecrets(l.filename)
 		if err != nil {
 			return err
