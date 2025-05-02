@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- Added a file based storage implementation
+- Added a file based storage implementation.
 
 ## [1.17.0] - 2025-04-17
 
